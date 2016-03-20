@@ -91,7 +91,7 @@ define(["Tone/core/Tone", "Tone/signal/TimelineSignal",
 		 *  @private
 		 */
 		this._sig = this.output = new Tone.TimelineSignal();
-		this._sig.setValueAtTime(this._minOutput, 0);
+		this._sig.setValueAtTime(0, 0);
 
 		//set the attackCurve initially
 		this.attackCurve = options.attackCurve;
@@ -115,13 +115,6 @@ define(["Tone/core/Tone", "Tone/signal/TimelineSignal",
 	};
 
 	/**
-	 *  the envelope time multipler
-	 *  @type {number}
-	 *  @private
-	 */
-	Tone.Envelope.prototype._timeMult = 0.25;
-
-	/**
 	 * Read the current value of the envelope. Useful for
 	 * syncronizing visual output to the envelope.
 	 * @memberOf Tone.Envelope#
@@ -131,7 +124,7 @@ define(["Tone/core/Tone", "Tone/signal/TimelineSignal",
 	 */
 	Object.defineProperty(Tone.Envelope.prototype, "value", {
 		get : function(){
-			return this._sig.value;
+			return this.getValueAtTime(this.now());
 		}
 	});
 
@@ -152,7 +145,7 @@ define(["Tone/core/Tone", "Tone/signal/TimelineSignal",
 				type === Tone.Envelope.Type.Exponential){
 				this._attackCurve = type;
 			} else {
-				throw Error("attackCurve must be either \"linear\" or \"exponential\". Invalid type: ", type);
+				throw Error("Invalid curve type: ", type);
 			}
 		}
 	});
@@ -174,7 +167,7 @@ define(["Tone/core/Tone", "Tone/signal/TimelineSignal",
 				type === Tone.Envelope.Type.Exponential){
 				this._releaseCurve = type;
 			} else {
-				throw Error("releaseCurve must be either \"linear\" or \"exponential\". Invalid type: ", type);
+				throw Error("Invalid curve type: ", type);
 			}
 		}
 	});
@@ -193,9 +186,19 @@ define(["Tone/core/Tone", "Tone/signal/TimelineSignal",
 		//to seconds
 		var now = this.now() + this.blockTime;
 		time = this.toSeconds(time, now);
-		var attack = this.toSeconds(this.attack) + time;
+		var attack = this.toSeconds(this.attack);
 		var decay = this.toSeconds(this.decay);
 		velocity = this.defaultArg(velocity, 1);
+		//check if it's not a complete attack
+		var currentValue = this.getValueAtTime(time);
+		if (currentValue > 0){
+			//subtract the current value from the attack time
+			var attackRate = 1 / attack;
+			var remainingDistance = 1 - currentValue;
+			//the attack is now the remaining time
+			attack = remainingDistance / attackRate;
+		}
+		attack += time;
 		//attack
 		if (this._attackCurve === Tone.Envelope.Type.Linear){
 			this._sig.linearRampToValueBetween(velocity, time, attack);
@@ -203,8 +206,7 @@ define(["Tone/core/Tone", "Tone/signal/TimelineSignal",
 			this._sig.exponentialRampToValueBetween(velocity, time, attack);
 		}
 		//decay
-		this._sig.setValueAtTime(velocity, attack);
-		this._sig.exponentialRampToValueAtTime(this.sustain * velocity, attack + decay);
+		this._sig.exponentialRampToValueBetween(velocity * this.sustain, attack + this.sampleTime, attack + decay);
 		return this;
 	};
 
@@ -219,13 +221,25 @@ define(["Tone/core/Tone", "Tone/signal/TimelineSignal",
 	Tone.Envelope.prototype.triggerRelease = function(time){
 		var now = this.now() + this.blockTime;
 		time = this.toSeconds(time, now);
-		var release = this.toSeconds(this.release);
-		if (this._releaseCurve === Tone.Envelope.Type.Linear){
-			this._sig.linearRampToValueBetween(this._minOutput, time, time + release);
-		} else {
-			this._sig.exponentialRampToValueBetween(this._minOutput, time, release + time);
+		if (this.getValueAtTime(time) > 0){
+			var release = this.toSeconds(this.release);
+			if (this._releaseCurve === Tone.Envelope.Type.Linear){
+				this._sig.linearRampToValueBetween(0, time, time + release);
+			} else {
+				this._sig.exponentialRampToValueBetween(0, time, release + time);
+			}
 		}
 		return this;
+	};
+
+	/**
+	 *  Get the scheduled value at the given time. This will
+	 *  return the unconverted (raw) value.
+	 *  @param  {Number}  time  The time in seconds.
+	 *  @return  {Number}  The scheduled value at the given time.
+	 */
+	Tone.Envelope.prototype.getValueAtTime = function(time){
+		return this._sig.getValueAtTime(time);
 	};
 
 	/**
@@ -247,6 +261,16 @@ define(["Tone/core/Tone", "Tone/signal/TimelineSignal",
 	};
 
 	/**
+	 *  Cancels all scheduled envelope changes after the given time.
+	 *  @param  {Time} after
+	 *  @returns {Tone.Envelope} this
+	 */
+	Tone.Envelope.prototype.cancel = function (after) {
+		this._sig.cancelScheduledValues(after);
+		return this;
+	};
+
+	/**
 	 *  Borrows the connect method from Tone.Signal.
 	 *  @function
 	 *  @private
@@ -264,19 +288,7 @@ define(["Tone/core/Tone", "Tone/signal/TimelineSignal",
 		return this;
 	};
 
-	/**
-	 *  The phase of the envelope.
-	 *  @enum {string}
-	 */
-	Tone.Envelope.Phase = {
-		Attack : "attack",
-		Decay : "decay",
-		Sustain : "sustain",
-		Release : "release",
-		Standby : "standby",
-	};
-
-	/**
+ 	/**
 	 *  The phase of the envelope.
 	 *  @enum {string}
 	 */

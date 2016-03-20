@@ -2,7 +2,7 @@
  *  Tone.js
  *  @author Yotam Mann
  *  @license http://opensource.org/licenses/MIT MIT License
- *  @copyright 2014-2015 Yotam Mann
+ *  @copyright 2014-2016 Yotam Mann
  */
 define(function(){
 
@@ -70,30 +70,33 @@ define(function(){
 	if (!isFunction(OscillatorNode.prototype.setPeriodicWave)){
 		OscillatorNode.prototype.setPeriodicWave = OscillatorNode.prototype.setWaveTable;	
 	}
+
 	//extend the connect function to include Tones
-	AudioNode.prototype._nativeConnect = AudioNode.prototype.connect;
-	AudioNode.prototype.connect = function(B, outNum, inNum){
-		if (B.input){
-			if (Array.isArray(B.input)){
-				if (isUndef(inNum)){
-					inNum = 0;
-				}
-				this.connect(B.input[inNum]);
-			} else {
-				this.connect(B.input, outNum, inNum);
-			}
-		} else {
-			try {
-				if (B instanceof AudioNode){
-					this._nativeConnect(B, outNum, inNum);
+	if (isUndef(AudioNode.prototype._nativeConnect)){
+		AudioNode.prototype._nativeConnect = AudioNode.prototype.connect;
+		AudioNode.prototype.connect = function(B, outNum, inNum){
+			if (B.input){
+				if (Array.isArray(B.input)){
+					if (isUndef(inNum)){
+						inNum = 0;
+					}
+					this.connect(B.input[inNum]);
 				} else {
-					this._nativeConnect(B, outNum);
+					this.connect(B.input, outNum, inNum);
 				}
-			} catch (e) {
-				throw new Error("error connecting to node: "+B);
+			} else {
+				try {
+					if (B instanceof AudioNode){
+						this._nativeConnect(B, outNum, inNum);
+					} else {
+						this._nativeConnect(B, outNum);
+					}
+				} catch (e) {
+					throw new Error("error connecting to node: "+B);
+				}
 			}
-		}
-	};
+		};
+	}
 
 	///////////////////////////////////////////////////////////////////////////
 	//	TONE
@@ -328,6 +331,14 @@ define(function(){
 	 *  @const
 	 */
 	Tone.prototype.blockTime = 128 / Tone.context.sampleRate;
+
+	/**
+	 *  The time of a single sample
+	 *  @type {number}
+	 *  @static
+	 *  @const
+	 */
+	Tone.prototype.sampleTime = 1 / Tone.context.sampleRate;
 	
 	///////////////////////////////////////////////////////////////////////////
 	//	CONNECTIONS
@@ -698,13 +709,20 @@ define(function(){
 	///////////////////////////////////////////////////////////////////////////
 
 	/**
-	 *  Return the current time of the clock + a single buffer frame. 
-	 *  If this value is used to schedule a value to change, the earliest
-	 *  it could be scheduled is the following frame. 
-	 *  @return {number} the currentTime from the AudioContext
+	 *  Return the current time of the AudioContext clock.
+	 *  @return {Number} the currentTime from the AudioContext
 	 */
 	Tone.prototype.now = function(){
 		return this.context.currentTime;
+	};
+
+	/**
+	 *  Return the current time of the AudioContext clock.
+	 *  @return {Number} the currentTime from the AudioContext
+	 *  @static
+	 */
+	Tone.now = function(){
+		return Tone.context.currentTime;
 	};
 
 	///////////////////////////////////////////////////////////////////////////
@@ -780,6 +798,7 @@ define(function(){
 		}
 	};
 
+<<<<<<< HEAD
 	/**
 	 *  Bind this to a touchstart event to start the audio on mobile devices. 
 	 *  <br>
@@ -803,16 +822,19 @@ define(function(){
 	 */
 	Tone.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
 
+=======
+>>>>>>> tone-dev
 	//setup the context
 	Tone._initAudioContext(function(audioContext){
 		//set the blockTime
 		Tone.prototype.blockTime = 128 / audioContext.sampleRate;
+		Tone.prototype.sampleTime = 1 / audioContext.sampleRate;
 		_silentNode = audioContext.createGain();
 		_silentNode.gain.value = 0;
 		_silentNode.connect(audioContext.destination);
 	});
 
-	Tone.version = "r6";
+	Tone.version = "r7-dev";
 
 	console.log("%c * Tone.js " + Tone.version + " * ", "background: #000; color: #fff");
 

@@ -138,7 +138,7 @@ define(["Tone/core/Tone", "Tone/event/Event", "Tone/core/Type", "Tone/core/Trans
 
 	/**
 	 *  Start the part at the given time. 
-	 *  @param  {Time}  time    When to start the part.
+	 *  @param  {TimelinePosition}  time    When to start the part.
 	 *  @param  {Time=}  offset  The offset from the start of the part
 	 *                           to begin playing at.
 	 *  @return  {Tone.Part}  this
@@ -146,7 +146,11 @@ define(["Tone/core/Tone", "Tone/event/Event", "Tone/core/Type", "Tone/core/Trans
 	Tone.Part.prototype.start = function(time, offset){
 		var ticks = this.toTicks(time);
 		if (this._state.getStateAtTime(ticks) !== Tone.State.Started){
-			offset = this.defaultArg(offset, 0);
+			if (this._loop){
+				offset = this.defaultArg(offset, this._loopStart);
+			} else {
+				offset = this.defaultArg(offset, 0);
+			}
 			offset = this.toTicks(offset);
 			this._state.addEvent({
 				"state" : Tone.State.Started, 
@@ -177,6 +181,9 @@ define(["Tone/core/Tone", "Tone/event/Event", "Tone/core/Type", "Tone/core/Trans
 					ticks += this._getLoopDuration();
 				}
 				event.start(ticks + "i");
+			} else if (event.startOffset < this._loopStart && event.startOffset >= offset) {
+				event.loop = false;
+				event.start(ticks + "i");
 			}
 		} else {
 			if (event.startOffset >= offset){
@@ -206,7 +213,7 @@ define(["Tone/core/Tone", "Tone/event/Event", "Tone/core/Type", "Tone/core/Trans
 
 	/**
 	 *  Stop the part at the given time.
-	 *  @param  {Time}  time  When to stop the part.
+	 *  @param  {TimelinePosition}  time  When to stop the part.
 	 *  @return  {Tone.Part}  this
 	 */
 	Tone.Part.prototype.stop = function(time){
@@ -362,7 +369,7 @@ define(["Tone/core/Tone", "Tone/event/Event", "Tone/core/Type", "Tone/core/Trans
 
 	/**
 	 *  Cancel scheduled state change events: i.e. "start" and "stop".
-	 *  @param {Time} after The time after which to cancel the scheduled events.
+	 *  @param {TimelinePosition} after The time after which to cancel the scheduled events.
 	 *  @return  {Tone.Part}  this
 	 */
 	Tone.Part.prototype.cancel = function(after){

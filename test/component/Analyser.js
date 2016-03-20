@@ -1,4 +1,5 @@
-define(["Tone/component/Analyser", "Test", "helper/Basic"], function (Analyser, Test, Basic) {
+define(["Tone/component/Analyser", "Test", "helper/Basic", "helper/Supports"], 
+	function (Analyser, Test, Basic, Supports) {
 
 	describe("Analyser", function(){
 
@@ -47,28 +48,31 @@ define(["Tone/component/Analyser", "Test", "helper/Basic"], function (Analyser, 
 			analysis = anl.analyse();
 			expect(analysis.length).to.equal(512);
 			for (i = 0; i < analysis.length; i++){
-				expect(analysis[i]).is.within(anl.minDecibels, anl.maxDecibels);
+				expect(analysis[i]).is.lessThan(anl.maxDecibels);
 			}
 			anl.dispose();
 		});
 
-		it("can run waveform analysis in both bytes and floats", function(){
-			var anl = new Analyser(256, "waveform");
-			anl.returnType = "byte";
-			var analysis = anl.analyse();
-			expect(analysis.length).to.equal(256);
-			var i;
-			for (i = 0; i < analysis.length; i++){
-				expect(analysis[i]).is.within(0, 255);
-			}
-			anl.returnType = "float";
-			analysis = anl.analyse();
-			expect(analysis.length).to.equal(256);
-			for (i = 0; i < analysis.length; i++){
-				expect(analysis[i]).is.within(0, 1);
-			}
-			anl.dispose();
-		});
+		if (Supports.ANALYZE_FLOAT_TIME_DOMAIN){
+
+			it("can run waveform analysis in both bytes and floats", function(){
+				var anl = new Analyser(256, "waveform");
+				anl.returnType = "byte";
+				var analysis = anl.analyse();
+				expect(analysis.length).to.equal(256);
+				var i;
+				for (i = 0; i < analysis.length; i++){
+					expect(analysis[i]).is.within(0, 255);
+				}
+				anl.returnType = "float";
+				analysis = anl.analyse();
+				expect(analysis.length).to.equal(256);
+				for (i = 0; i < analysis.length; i++){
+					expect(analysis[i]).is.within(0, 1);
+				}
+				anl.dispose();
+			});
+		}
 
 	});
 });

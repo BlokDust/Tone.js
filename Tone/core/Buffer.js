@@ -318,6 +318,13 @@ define(["Tone/core/Tone", "Tone/core/Emitter"], function(Tone){
 	};
 
 	/**
+	 *  A path which is prefixed before every url.
+	 *  @type  {String}
+	 *  @static
+	 */
+	Tone.Buffer.baseUrl = "";
+
+	/**
 	 *  Makes an xhr reqest for the selected url then decodes
 	 *  the file as an audio buffer. Invokes
 	 *  the callback once the audio buffer loads.
@@ -329,45 +336,20 @@ define(["Tone/core/Tone", "Tone/core/Emitter"], function(Tone){
 	 */
 	Tone.Buffer.load = function(url, callback){
 		var request = new XMLHttpRequest();
-		request.open("GET", url, true);
+		request.open("GET", Tone.Buffer.baseUrl + url, true);
 		request.responseType = "arraybuffer";
 		// decode asynchronously
 		request.onload = function() {
 			Tone.context.decodeAudioData(request.response, function(buff) {
-				if(!buff){
-					throw new Error("could not decode audio data:" + url);
-				}
 				callback(buff);
+			}, function(){
+				throw new Error("could not decode audio data:" + url);
 			});
 		};
 		//send the request
 		request.send();
 		return request;
 	};
-
-	/**
-	 *  @deprecated us on([event]) instead
-	 */
-	Object.defineProperty(Tone.Buffer, "onload", {
-		set : function(cb){
-			console.warn("Tone.Buffer.onload is deprecated, use Tone.Buffer.on('load', callback)");
-			Tone.Buffer.on("load", cb);
-		}
-	});
-
-	Object.defineProperty(Tone.Buffer, "onprogress", {
-		set : function(cb){
-			console.warn("Tone.Buffer.onprogress is deprecated, use Tone.Buffer.on('progress', callback)");
-			Tone.Buffer.on("progress", cb);
-		}
-	});
-
-	Object.defineProperty(Tone.Buffer, "onerror", {
-		set : function(cb){
-			console.warn("Tone.Buffer.onerror is deprecated, use Tone.Buffer.on('error', callback)");
-			Tone.Buffer.on("error", cb);
-		}
-	});
 
 	return Tone.Buffer;
 });

@@ -10,6 +10,7 @@
 	<script type="text/javascript" src="../build/Tone.js"></script>
 	<script type="text/javascript" src="./scripts/jquery.min.js"></script>
 	<script type="text/javascript" src="./scripts/draggabilly.js"></script>
+	<script type="text/javascript" src="./scripts/StartAudioContext.js"></script>
 	<script type="text/javascript" src="./scripts/Interface.js"></script>
 	<script type="text/javascript" src="./scripts/Logo.js"></script>
 
@@ -40,7 +41,7 @@
 		/*
 		 KICK
 		 */
-		var kick = new Tone.DrumSynth({
+		var kick = new Tone.MembraneSynth({
 			"envelope" : {
 				"sustain" : 0,
 				"attack" : 0.02,

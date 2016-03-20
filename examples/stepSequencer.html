@@ -11,6 +11,7 @@
 	<script type="text/javascript" src="./scripts/jquery.min.js"></script>
 	<script type="text/javascript" src="./scripts/draggabilly.js"></script>
 	<script type="text/javascript" src="./scripts/Logo.js"></script>
+	<script type="text/javascript" src="./scripts/StartAudioContext.js"></script>
 	<script type="text/javascript" src="./scripts/Interface.js"></script>
 	<script type="text/javascript" src="./scripts/nexusUI.js"></script>
 
@@ -31,10 +32,8 @@
 		<div id="Title">Tone.Transport</div>
 		<div id="Explanation">
 			<a href="http://tonejs.org/docs/#Transport">Tone.Transport</a> 
-			is the application-wide timekeeper. It uses an OscillatorNode
-			as it's clock source which enables sample-accurate scheduling as well as 
-			tempo-curves and automation. This example uses Tone.Transport.setInterval
-			to invoke a callback every 16th note.
+			is the application-wide timekeeper. It's clock source enables sample-accurate scheduling as well as 
+			tempo-curves and automation. This example uses Tone.Sequence to invoke a callback every 16th note.
 		</div>
 		<canvas nx="matrix"></canvas>
 	</div>	
