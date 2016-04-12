@@ -1,4 +1,4 @@
-define(["Tone/core/Tone", "Tone/component/Envelope", "Tone/core/Gain"], function(Tone){
+define(["Tone/core/Tone", "Tone/component/SimpleEnvelope", "Tone/core/Gain"], function(Tone){
 
 	"use strict";
 
@@ -31,7 +31,7 @@ define(["Tone/core/Tone", "Tone/component/Envelope", "Tone/core/Gain"], function
 	 */
 	Tone.AmplitudeEnvelope = function(){
 
-		Tone.Envelope.apply(this, arguments);
+		Tone.SimpleEnvelope.apply(this, arguments);
 
 		/**
 		 *  the input node
@@ -43,7 +43,7 @@ define(["Tone/core/Tone", "Tone/component/Envelope", "Tone/core/Gain"], function
 		this._sig.connect(this.output.gain);
 	};
 
-	Tone.extend(Tone.AmplitudeEnvelope, Tone.Envelope);
+	Tone.extend(Tone.AmplitudeEnvelope, Tone.SimpleEnvelope);
 
 	/**
 	 *  Clean up
@@ -52,7 +52,7 @@ define(["Tone/core/Tone", "Tone/component/Envelope", "Tone/core/Gain"], function
 	Tone.AmplitudeEnvelope.prototype.dispose = function(){
 		this.input.dispose();
 		this.input = null;
-		Tone.Envelope.prototype.dispose.call(this);
+		Tone.SimpleEnvelope.prototype.dispose.call(this);
 		return this;
 	};
 
