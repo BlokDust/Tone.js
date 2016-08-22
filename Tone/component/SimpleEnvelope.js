@@ -129,10 +129,21 @@ define(["Tone/core/Tone", "Tone/signal/Signal",
     };
 
 
-    Tone.SimpleEnvelope.prototype.triggerAttackRelease = function(duration, when){
+    Tone.SimpleEnvelope.prototype.triggerAttackRelease = function(duration, when, velocity){
         when = this.isUndef(when) ? this.context.currentTime : when;
-        this.triggerAttack(when);
-        this.triggerRelease(duration + when);
+        duration = this.isUndef(duration) ? 0 : duration;
+        velocity = this.isUndef(velocity) ? 1 : velocity;
+
+        this._sig.cancelScheduledValues(0);
+
+        // ATTACK
+        this._sig.setValueAtTime(this._sig.value, when);
+        this._sig.linearRampToValueAtTime(velocity, when + this.attack);
+        this._sig.linearRampToValueAtTime(this.sustain * velocity, when + this.attack + this.decay)
+
+        // RELEASE
+        this._sig.setValueAtTime(this._sig.value, duration + when + this.attack + this.decay);
+        this._sig.linearRampToValueAtTime(this._minOutput, duration + when + this.release + this.attack + this.decay);
     };
 
     /**
